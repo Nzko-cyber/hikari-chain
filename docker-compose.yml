@@ -13,33 +13,35 @@ services:
       - hikari-data:/root/.hikari
     environment:
       - MINIMUM_GAS_PRICES=0.01uphoton,0.01ulight
-    command: >
-      sh -c "
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
         if [ ! -f /root/.hikari/config/genesis.json ]; then
-          echo '🔧 Initializing Hikari Chain...';
+          echo 'Initializing Hikari Chain...';
           hikarid init mynode --chain-id hikari-1 --default-denom ulight;
 
-          echo '🔑 Creating validator key...';
+          echo 'Creating validator key...';
           echo 'word1 word2 word3 word4 word5 word6 word7 word8 word9 word10 word11 word12 word13 word14 word15 word16 word17 word18 word19 word20 word21 word22 word23 word24' | hikarid keys add validator --recover --keyring-backend test;
 
-          echo '💰 Adding genesis account...';
+          echo 'Adding genesis account...';
           hikarid genesis add-genesis-account validator 10000000000000ulight,10000000000uphoton --keyring-backend test;
 
-          echo '✍️  Creating genesis transaction...';
+          echo 'Creating genesis transaction...';
           hikarid genesis gentx validator 1000000000ulight --chain-id hikari-1 --keyring-backend test;
 
-          echo '📦 Collecting genesis transactions...';
+          echo 'Collecting genesis transactions...';
           hikarid genesis collect-gentxs;
 
-          echo '⚙️  Configuring node...';
-          sed -i 's/minimum-gas-prices = \"\"/minimum-gas-prices = \"0.01uphoton,0.01ulight\"/g' /root/.hikari/config/app.toml;
+          echo 'Configuring node...';
+          sed -i 's/minimum-gas-prices = ""/minimum-gas-prices = "0.01uphoton,0.01ulight"/g' /root/.hikari/config/app.toml;
           sed -i 's/enable = false/enable = true/g' /root/.hikari/config/app.toml;
           sed -i 's/swagger = false/swagger = true/g' /root/.hikari/config/app.toml;
+          sed -i 's/address = "tcp:\/\/localhost:1317"/address = "tcp:\/\/0.0.0.0:1317"/g' /root/.hikari/config/app.toml;
+          sed -i 's/laddr = "tcp:\/\/127.0.0.1:26657"/laddr = "tcp:\/\/0.0.0.0:26657"/g' /root/.hikari/config/config.toml;
         fi;
 
-        echo '🚀 Starting Hikari Chain...';
+        echo 'Starting Hikari Chain...';
         hikarid start --minimum-gas-prices=0.01uphoton,0.01ulight
-      "
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:26657/health"]
       interval: 30s
